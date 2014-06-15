@@ -1,12 +1,11 @@
 HoMM-Map-Filter
 ===============
-This is a tool for filtering Heroes of Might and Magic III maps by criteria:
-1. Game version
+This is a tool for filtering Heroes of Might and Magic III maps by criteria:<br>
+1. Minimal difficulty
 2. Map size
 3. Player count
 4. Has dungeon?
 5. Is allied?
-6. Minimal difficulty
 
 Usage
 ===============
@@ -19,14 +18,15 @@ TO-DO
 1. Add rumors criteria
 2. Add timed events + map events criteria
 3. Format and sort output properly.
+4. Add support for previous versions.
 
 Disclaimer
 ===============
-I am not responsible for anything that might happen during execution of this app :)
+I am not responsible for anything that might happen during the execution of this app :)
 
 License
 ===============
-Do what the fuck you want with it :) Just give a credit to this repo.
+Do what the fuck you want with it :) Just give a credit to this repo or me (artemonster).
 
 Contact
 ===============
