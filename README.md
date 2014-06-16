@@ -8,7 +8,7 @@ This is a tool for filtering Heroes of Might and Magic III maps by following cri
 5. Is allied?<br>
 6. ...
 
-It was designed to fulfll one purpose: filter out all "interersting" maps or me and my gf, for a hot-seat play. "Interesting" aspect is purely subjective, based on availability of rumors, events, timed events, quest guards, obelisks.<br>
+It was designed to fulfill one purpose: filter out all "interersting" maps or me and my gf, for a hot-seat play. "Interesting" aspect is purely subjective, based on availability of rumors, events, timed events, quest guards and obelisks (not implemented yet).<br>
 Currently, only SoD version is supported, because the map format is more or less consistent within this release. All previous map versions (RoE and AB) are a pure mess, and adding this case handling would be a waste of time (you're welcome, though :)).
 
 Usage
@@ -25,6 +25,11 @@ TO-DO
 4. Has Obelisks? criteria<br>
 5. Add support for previous versions<br>
 6. Make allied check more sophisticated. Currently, if maps has team setting and canBeHuman >=2, then the map is considered allied, altough it can give false-positives. Proper way would be to do a cross-check of teams, so that we have minimum of 1 team, consisting minimum out of 2 canBeHuman players.<br>
+
+Compiling
+===============
+Make sure you have zlib binaries and adjust paths to it in project settings.
+
 
 Disclaimer
 ===============
