@@ -150,7 +150,7 @@ MapDescriptor* matchDescription(char* filename) {
     unsigned char victoryCondition = buf[infoOffset];
     switch (victoryCondition) {
         case 0xFF: infoOffset += 1; break;
-        case 0x00: infoOffset += 1+3; break;
+        case 0x00: infoOffset += 1+3+1; break;
         case 0x01: infoOffset += 1+8; break;
         case 0x02: infoOffset += 1+7; break;
         case 0x03: infoOffset += 1+7; break;
@@ -262,7 +262,6 @@ MapDescriptor* matchDescription(char* filename) {
         if (strstr(objects[i].objName, "AVGfdrg.def") != NULL) dragonDwellings++;
         if (strstr(objects[i].objName, "AVGazur.def") != NULL) dragonDwellings++;
         if (strstr(objects[i].objName, "AVGrust.def") != NULL) dragonDwellings++;
-
         if (strstr(objects[i].objName, "AVSutop0.def") != NULL) dragonUtopias++;
         infoOffset += 6 + 6 + 2 + 2;//passability6, actions6, landscape, editGroup
         objects[i].objClass = getInt(infoOffset, buf);
@@ -275,7 +274,7 @@ MapDescriptor* matchDescription(char* filename) {
     int garrissons = 0, isGrail = 0, locEvents = 0, questGuard = 0, seerHuts = 0;
     int tunedObjects = getInt(infoOffset, buf);
     for (int i = 0; i < tunedObjects; ++i) {
-        if (i == 0xb92) {
+        if (i == 0x65e) {
             int a = 5;
         }
         infoOffset += 3; //x,y,z  
@@ -412,7 +411,7 @@ MapDescriptor* matchDescription(char* filename) {
                  //ObjectGeneralRandomDwelling dwelling;
                  infoOffset += 4;
                  if (getInt(infoOffset, buf)==0) infoOffset += 2;
-                 infoOffset += 2+2;
+                 infoOffset += 1+1;
                  break;
              case 217:
                  //ObjectLevelRandomDwelling dwelling;
@@ -422,7 +421,7 @@ MapDescriptor* matchDescription(char* filename) {
              case 218:
                  //ObjectTownRandomDwelling dwelling;
                  infoOffset += 4;
-                 infoOffset += 2+2;
+                 infoOffset += 1+1;
                  break;
              case 220:
                  //ObjectAbandonedMine abandoned;
@@ -480,7 +479,7 @@ int main() {
     cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
 
     // TEST DATA
-    //gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 1; difficulty = 1;
+    //gameVer = 2; mapSize = 144; numPlayers = 3; hasDungeon = 2; isAllied = 1; difficulty = 1;
 
     //####################### List all files in current directory #######################
     WIN32_FIND_DATA ffd;
@@ -716,6 +715,7 @@ inline void skipSeer(int &offset, vector<unsigned char> &buf) {
     int quest = getChar(offset, buf);
     switch(quest) {
         case 0:
+            goto reward;
             break;
         case 1:
             offset += 4;
@@ -751,6 +751,7 @@ inline void skipSeer(int &offset, vector<unsigned char> &buf) {
     skipName(offset, buf);
     skipName(offset, buf);
     skipName(offset, buf);
+reward:
     int reward = getChar(offset, buf);
     switch(reward) {
        case 0:
