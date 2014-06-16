@@ -5,6 +5,11 @@ VisualStudioVersion = 12.0.30110.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HoMM3MapFilter", "HoMM3MapFilter\HoMM3MapFilter.vcxproj", "{9F19FDF6-D885-467C-AB9C-FF9DC2B3F9BD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4DFC655E-03BA-41EA-933B-ABDADD6B73E1}"
+	ProjectSection(SolutionItems) = preProject
+		Release.zip = Release.zip
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

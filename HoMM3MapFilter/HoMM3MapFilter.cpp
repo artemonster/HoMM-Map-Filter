@@ -259,30 +259,28 @@ int main() {
     vector<char*> files, nonMatched;
     vector<MapDescriptor*> matched;
 
-    cout << "Welcome to HoMM3 map filter tool. \nUsage: place it in maps directory of your homm3 game and follow the"<<
-        " instructions \nAll non-matched maps will be copied to the 'non_matched' directory."<< 
+    cout << "Welcome to HoMM3 map filter tool. \nUsage: place it in maps directory of your homm3 game and follow "<<
+        "the instructions \nAll non-matched maps will be copied to the 'non_matched' directory."<< 
         "\n(!) Please ensure such directory already exists!" <<
         "\nAll maps that are left have matched the search criteria."<<
         "\nWarning! Input is not fool-proof!\n" ;
     //cout << "Game version: 0: RoE, 1: AB, 2: SoD, 3: DC\n"; cin >> gameVer;
     gameVer = 2;
 
-    //cout << "Map size: 0: S, 1: M, 2: L, 3: XL\n"; cin >> mapSize;
-    //mapSize = ( mapSize + 1 ) * 36; //36,72,108,144
-    //cout << "Difficulty (min. value): 0: Easy, 1: Normal, 2: Hard, 3: Expert, 4: Impossible\n"; cin >> difficulty;
-    //cout << "Players (min. value):\n"; cin >> numPlayers;
-    //cout << "Has dungeon?: 0: No, 1: Yes, 2: DC\n"; cin >> hasDungeon;
-    //cout << "Is Allied?: 0: No, 1: Yes, 2: DC\n"; cin >> isAllied;
-    //cout << "Has timed events?: 0: No, 1: Yes, 2: DC\n"; cin >> hasTEvents;
-    //cout << "Has map events?: 0: No, 1: Yes, 2: DC\n"; cin >> hasEvents;
-    // 
-    // 
-    //cout << "Sort output by: 0: difficulty, 1: Yes, 2: DC\n"; cin >> sortCriteria;
-    //cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
+    cout << "Map size: 0: S, 1: M, 2: L, 3: XL\n"; cin >> mapSize;
+    mapSize = ( mapSize + 1 ) * 36; //36,72,108,144
+    cout << "Difficulty (min. value): 0: Easy, 1: Normal, 2: Hard, 3: Expert, 4: Impossible\n"; cin >> difficulty;
+    cout << "Players (min. value):\n"; cin >> numPlayers;
+    cout << "Has dungeon?: 0: No, 1: Yes, 2: DC\n"; cin >> hasDungeon;
+    cout << "Is Allied?: 0: No, 1: Yes, 2: DC\n"; cin >> isAllied;
+    cout << "Has timed events?: 0: No, 1: Yes, 2: DC\n"; cin >> hasTEvents;
+    cout << "Has map events?: 0: No, 1: Yes, 2: DC\n"; cin >> hasEvents;
+
+    cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
 
     // TEST DATA
-    gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 2; 
-    hasTEvents = 1; hasEvents = 1; difficulty = 1;
+    //gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 2; 
+    //hasTEvents = 1; hasEvents = 1; difficulty = 1;
 
     //####################### List all files in current directory #######################
     WIN32_FIND_DATA ffd;
