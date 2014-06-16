@@ -13,7 +13,7 @@ Currently, only SoD version is supported, because the map format is more or less
 
 Usage
 ===============
-Take the executable from bin.zip, along with zlib.dll and place in maps directry of your game. Also, make a non_matched empty directory. 
+Take the executable from *Release.zip*, along with zlib.dll and place in maps directry of your game. Also, make a *non_matched* empty directory. 
 Run the app and input the criteria.
 If app crashes, run with verbose mode on (sometimes the maps are corrupted and they crash the app). To test, if the map is corrupted, try to either start a game with it, OR try to unzip it (using 7z or WinRar) -> if it fails, then in is corrupted and you should remove it anyways.
 
