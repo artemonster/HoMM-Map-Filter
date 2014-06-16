@@ -471,17 +471,16 @@ int main() {
     //cout << "Game version: 0: RoE, 1: AB, 2: SoD, 3: DC\n"; cin >> gameVer;
     gameVer = 2;
 
-    //cout << "Map size: 0: S, 1: M, 2: L, 3: XL\n"; cin >> mapSize;
-    //mapSize = ( mapSize + 1 ) * 36; //36,72,108,144
-    //cout << "Difficulty (min. value): 0: Easy, 1: Normal, 2: Hard, 3: Expert, 4: Impossible\n"; cin >> difficulty;
-    //cout << "Players (min. value):\n"; cin >> numPlayers;
-    //cout << "Has dungeon?: 0: No, 1: Yes, 2: DC\n"; cin >> hasDungeon;
-    //cout << "Is Allied?: 0: No, 1: Yes, 2: DC\n"; cin >> isAllied;
-
-    //cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
+    cout << "Map size: 0: S, 1: M, 2: L, 3: XL\n"; cin >> mapSize;
+    mapSize = ( mapSize + 1 ) * 36; //36,72,108,144
+    cout << "Difficulty (min. value): 0: Easy, 1: Normal, 2: Hard, 3: Expert, 4: Impossible\n"; cin >> difficulty;
+    cout << "Players (min. value):\n"; cin >> numPlayers;
+    cout << "Has dungeon?: 0: No, 1: Yes, 2: DC\n"; cin >> hasDungeon;
+    cout << "Is Allied?: 0: No, 1: Yes, 2: DC\n"; cin >> isAllied;
+    cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
 
     // TEST DATA
-    gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 1; difficulty = 1;
+    //gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 1; difficulty = 1;
 
     //####################### List all files in current directory #######################
     WIN32_FIND_DATA ffd;
