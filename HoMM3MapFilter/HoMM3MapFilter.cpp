@@ -6,6 +6,7 @@
 #include <sstream>
 #include <strsafe.h>
 #include <vector>
+#include <algorithm>
 #include <iomanip>
 #include <stdio.h>
 #include <zlib.h>
@@ -23,6 +24,7 @@ struct MapDescriptor {
     int eventCnt;
     int timedEventCnt;
     int score;
+    bool operator < (const MapDescriptor& str) const { return (score < str.score); }
 };
 
 MapDescriptor* matchDescription(char* filename) {
@@ -249,8 +251,9 @@ MapDescriptor* matchDescription(char* filename) {
     if (thisTEventCnt != 0) thisScore += 50 + 2 * thisEventCnt;
     //Obelisks
     //Quest guards
-exit:    
-    MapDescriptor* descriptor = new MapDescriptor { filename, thisPlayers, difficulty, thisEventCnt, thisTEventCnt };
+exit:
+    MapDescriptor* descriptor = new MapDescriptor { filename, thisPlayers, difficulty, 
+        thisEventCnt, thisTEventCnt, 0 };
     return descriptor;
 }
 
@@ -291,6 +294,7 @@ int main() {
         if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             char* ch = new char[260];
             char DefChar = ' ';
+            //This effectively transforms non-latin characters to their latin equivalent. Fix this?
             WideCharToMultiByte(CP_ACP, 0, ffd.cFileName, -1, ch, 260, &DefChar, NULL);
             char* found=strstr(ch,".h3m");
             char* found2=strstr(ch,".H3M");
@@ -312,7 +316,7 @@ int main() {
         if (match != NULL) {
             matched.push_back(match);
         } else {
-            cout << "...moved!";
+            if (verbose) cout << "...moved!";
             char* newFile = new char[strlen(file) + 14];
             strcpy(newFile, "./non_matched/");
             strcat(newFile, file);
@@ -322,10 +326,11 @@ int main() {
 
     //####################### Output results #######################
     cout << "\n===============================================================================\n";
-    cout << "| Name       | Difficulty   | Events   | TimedEvents   |\n"; //TODO (max 80)
-    //TODO: SORT THE VECTOR BY CRITERIA
+    cout <<   "| Name           | Score | Events | Rumors | TEvents | QuestGuards | Obelisks |\n";
+    std::sort (matched.begin(), matched.end()); 
     for (auto match : matched) {
-        cout << match->fileName << " | " << match->difficulty << "\n"; //TODO proper formatted output (max80)
+        //TODO proper formatted columns.
+        cout << "| " << setw(16)<< match->fileName << "| " << setw(6) << match->score << "| " << "\n";
     }   
     system("pause");
     return 0;
