@@ -19,8 +19,10 @@ struct MapDescriptor {
     char* fileName;
     int players;
     int difficulty;
+    int rumors;
     int eventCnt;
     int timedEventCnt;
+    int score;
 };
 
 MapDescriptor* matchDescription(char* filename) {
@@ -111,17 +113,17 @@ MapDescriptor* matchDescription(char* filename) {
             int nameOffset = (buf[infoOffset+5] << 24) |(buf[infoOffset+4] << 16) 
                 | (buf[infoOffset+3] << 8) | buf[infoOffset+2];
             infoOffset += 5 + nameOffset + 2;
-            int numberOfHeroes = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
-                | (buf[infoOffset+1] << 8) | buf[infoOffset];
-            infoOffset += 4;
-            for (int j = 0; j < numberOfHeroes; ++j) { //Number of heroes
-               infoOffset++; //skip id
-               int nameOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
-                   | ( buf[infoOffset + 1] << 8 ) | buf[infoOffset];
-               infoOffset += nameOffset + 4;
-            }
         } else {
-            infoOffset+=6; //+junk+heroCount+1
+            infoOffset+=2; //+junk+heroCount+1
+        }
+        int numberOfHeroes = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+                | (buf[infoOffset+1] << 8) | buf[infoOffset];
+        infoOffset += 4;
+        for (int j = 0; j < numberOfHeroes; ++j) { //Number of heroes
+            infoOffset++; //skip id
+            int nameOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+                | ( buf[infoOffset + 1] << 8 ) | buf[infoOffset];
+            infoOffset += nameOffset + 4;
         }
     }
     // ########## Victory Condition ##########
@@ -171,15 +173,20 @@ MapDescriptor* matchDescription(char* filename) {
     thisPlayers = ( thisCanBeComputer >= thisCanBeHuman ) ? thisCanBeComputer : thisCanBeHuman;
     if (thisPlayers <= numPlayers) return NULL;
 
+    goto exit; //this is for the release, because everything under this line is not tested yet.
+
     // ########## FREE HEROES ##########
     // This is skipped.
-    infoOffset += 20;
-    infoOffset += 4;
+    infoOffset += 24; //Skip heroes availability info
     unsigned char amountOfHeroes = buf[infoOffset++];
     if (amountOfHeroes != 0x00) {
-        //TODO!!11
-        int nameOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+        for (int i = 0; i < amountOfHeroes; ++i) {
+            infoOffset += 2;
+            int nameOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
                 | (buf[infoOffset+1] << 8) | buf[infoOffset];
+            infoOffset += 4 + nameOffset; //skip name
+            infoOffset++; //skip availability byte
+        }
     }
     infoOffset += 31; //junk
     // ########## ARTIFACTS AND SPELLS ##########
@@ -188,19 +195,61 @@ MapDescriptor* matchDescription(char* filename) {
     infoOffset += 9;    //spells
     infoOffset += 4;    //sec skills
     // ########## RUMORS ##########
-    // TODO
     int amountOfRumors = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
                 | (buf[infoOffset+1] << 8) | buf[infoOffset];
-    infoOffset += 3;
+    infoOffset += 4;
     if (amountOfRumors != 0) {
-
+        for (int i = 0; i < amountOfRumors; ++i) {
+            int nameOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+                    | (buf[infoOffset+1] << 8) | buf[infoOffset];
+            infoOffset += 4 + nameOffset; //skip name
+            int rumorOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+                    | (buf[infoOffset+1] << 8) | buf[infoOffset];
+            infoOffset += 4 + rumorOffset; //skip rumor text
+        }
+    }
+    // ########## HERO SETTINGS ##########
+    for (int i = 0; i < 156; ++i) {
+        if (buf[infoOffset++] != 0x00) {
+            if (buf[infoOffset++] != 0x00) infoOffset += 4; //exp
+            if (buf[infoOffset++] != 0x00) {//sec skills
+                int secSkillsCount = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+                    | (buf[infoOffset+1] << 8) | buf[infoOffset];     
+                infoOffset += 4;
+                if (secSkillsCount != 0) infoOffset += secSkillsCount * 2;
+            }
+            if (buf[infoOffset++] != 0x00) { //artefacts
+                infoOffset += 30;
+                int backPackCount = (buf[infoOffset+1] << 8) | buf[infoOffset];
+                infoOffset += 2;
+                if (backPackCount != 0) infoOffset += 2 * backPackCount;
+            }
+            if (buf[infoOffset++] != 0x00) { //bio
+                int bioOffset = (buf[infoOffset+3] << 24) |(buf[infoOffset+2] << 16) 
+                    | (buf[infoOffset+1] << 8) | buf[infoOffset];                    
+                infoOffset += 4 + bioOffset;
+            }
+            infoOffset += 1; //sex
+            if (buf[infoOffset++] != 0x00) infoOffset += 9; //spells
+            if (buf[infoOffset++] != 0x00) infoOffset += 4; //attributes
+        }
     }
     // ########## MAP DATA ##########
     // This is skipped
     int multiplier = ( thisDungeon != 0 ) ? 2 : 1;
     infoOffset += multiplier*thisSize*thisSize*7;
     // ########## ALL OBJECTS + EVENTS ##########
-    // TODO collect info about events
+    // TODO
+
+
+    // ########## COMPUTE SCORE VALUE ##########
+    int thisScore = 0;
+    if (amountOfRumors != 0) thisScore += 50 + 2 * amountOfRumors;
+    if (thisEventCnt != 0) thisScore += 50 + 1 * thisEventCnt;
+    if (thisTEventCnt != 0) thisScore += 50 + 2 * thisEventCnt;
+    //Obelisks
+    //Quest guards
+exit:    
     MapDescriptor* descriptor = new MapDescriptor { filename, thisPlayers, difficulty, thisEventCnt, thisTEventCnt };
     return descriptor;
 }
@@ -211,7 +260,7 @@ int main() {
     vector<MapDescriptor*> matched;
 
     cout << "Welcome to HoMM3 map filter tool. \nUsage: place it in maps directory of your homm3 game and follow the"<<
-        "instructions. \nAll non-matched maps will be copied to the 'non_matched' directory."<< 
+        " instructions \nAll non-matched maps will be copied to the 'non_matched' directory."<< 
         "\n(!) Please ensure such directory already exists!" <<
         "\nAll maps that are left have matched the search criteria."<<
         "\nWarning! Input is not fool-proof!\n" ;
@@ -232,7 +281,7 @@ int main() {
     //cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
 
     // TEST DATA
-    gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 1; isAllied = 1; 
+    gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 2; 
     hasTEvents = 1; hasEvents = 1; difficulty = 1;
 
     //####################### List all files in current directory #######################
