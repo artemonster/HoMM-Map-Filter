@@ -6,9 +6,9 @@ This is a tool for filtering Heroes of Might and Magic III maps by following cri
 3. Player count<br>
 4. Has dungeon?<br>
 5. Is allied?<br>
-6. ...
+6. Additional applies: has rumors, timed events, local events, quest guards, grail, dragon utopias, dragon dwellings <br>.
 
-It was designed to fulfill one purpose: filter out all "interersting" maps or me and my gf, for a hot-seat play. "Interesting" aspect is purely subjective, based on availability of rumors, events, timed events, quest guards and obelisks (not implemented yet).<br>
+It was designed to fulfill one purpose: filter out all "interersting" maps or me and my gf, for a hot-seat play. "Interesting" aspect is purely subjective, based on availability of rumors, events, timed events, quest guards and obelisks.<br>
 Currently, only SoD version is supported, because the map format is more or less consistent within this release. All previous map versions (RoE and AB) are a pure mess, and adding this case handling would be a waste of time (you're welcome, though :)).
 
 Usage
@@ -19,12 +19,8 @@ If app crashes, run with verbose mode on (sometimes the maps are corrupted and t
 
 TO-DO
 ===============
-1. Add rumors criteria<br>
-2. Add timed events + map events criteria + quest guards<br>
-3. Format and sort output properly<br>
-4. Has Obelisks? criteria<br>
-5. Add support for previous versions<br>
-6. Make allied check more sophisticated. Currently, if maps has team setting and canBeHuman >=2, then the map is considered allied, altough it can give false-positives. Proper way would be to do a cross-check of teams, so that we have minimum of 1 team, consisting minimum out of 2 canBeHuman players.<br>
+1. Add support for previous versions<br>
+2. Make allied check more sophisticated. Currently, if maps has team setting and canBeHuman >=2, then the map is considered allied, altough it can give false-positives. Proper way would be to do a cross-check of teams, so that we have minimum of 1 team, consisting minimum out of 2 canBeHuman players.<br>
 
 Compiling
 ===============
