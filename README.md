@@ -33,7 +33,7 @@ I am not responsible for anything that might happen to you or your map collectio
 
 License
 ===============
-Do what the fuck you want with it :) Just give a credit to this repo or me (artemonster).
+Do whatever you want with it :) Just give a credit to this repo or me (artemonster).
 
 Contact
 ===============
