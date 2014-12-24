@@ -20,7 +20,7 @@ If app crashes, run with verbose mode on (sometimes the maps are corrupted and t
 Sampe output
 ===============
 This is a sample output for filtering maps with following criteria: XL map, allied.
-
+![alt text](https://github.com/artemonster/HoMM-Map-Filter/blob/master/sample_out.PNG "Sample output")
 
 TO-DO
 ===============
