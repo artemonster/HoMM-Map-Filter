@@ -17,6 +17,11 @@ Take the executable from *Release.zip*, along with zlib.dll and place in maps di
 Run the app and input the criteria.
 If app crashes, run with verbose mode on (sometimes the maps are corrupted and they crash the app). To test, if the map is corrupted, try to either start a game with it, OR try to unzip it (using 7z or WinRar) -> if it fails, then in is corrupted and you should remove it anyways.
 
+Sampe output
+===============
+This is a sample output for filtering maps with following criteria: XL map, allied.
+
+
 TO-DO
 ===============
 1. Add support for previous versions<br>
