@@ -17,7 +17,7 @@ using namespace std;
 int gameVer, mapSize, difficulty, numPlayers, hasDungeon, isAllied, hasRumors;
 bool verbose = true;
 struct MapDescriptor {
-    char* fileName;
+    wchar_t* fileName;
     int score;
     int eventCnt;
     int rumors;
@@ -47,31 +47,39 @@ inline void skipMonster(int &offset, vector<unsigned char> &buf);
 inline void skipSeer(int &offset, vector<unsigned char> &buf);
 
 
-MapDescriptor* matchDescription(char* filename) {
+MapDescriptor* matchDescription(WCHAR* filename) {
     unsigned char thisVersion, thisSize, thisDungeon, thisDifficulty, thisPlayers;
-    std::ifstream file(filename);
+    std::ifstream file(filename, std::ios::binary);
+    file.unsetf(std::ios::skipws);
     if (!file.is_open()) {
-        cout << "Couldn't open file: " << filename << "\n";
+        cout << "\nCouldn't open file: " << filename << "\n";
         return NULL;
     }
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    const std::string& s = ss.str();
-    vector<unsigned char> buf(s.begin(), s.end());
+    std::streampos fileSize;
+    file.seekg(0, std::ios::end);
+    fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    // reserve capacity
+    std::vector<unsigned char> buf;
+    buf.reserve(fileSize);
+    // read the data:
+    buf.insert(buf.begin(),
+               std::istream_iterator<unsigned char>(file),
+               std::istream_iterator<unsigned char>());
     file.close(); 
     //Check if starts with 1f 8b, then it must be gzipped
     if (buf[0] == 0x1f && buf[1] == 0x8b) {
-        gzFile inFileZ = gzopen(filename, "rb");
+        gzFile inFileZ = gzopen_w(filename, "rb");
         //inf(file, stdout);
         if (inFileZ == NULL) {
             printf("Error: Failed to gzopen %s\n", filename);
             return NULL;
         }
-        unsigned char unzipBuffer[8192];
-        unsigned int unzippedBytes;
+        unsigned char unzipBuffer[8192*4];
+        int unzippedBytes;
         std::vector<unsigned char> unzippedData;
         while (true) {
-            unzippedBytes = gzread(inFileZ, unzipBuffer, 8192);
+            unzippedBytes = gzread(inFileZ, unzipBuffer, 8192*4-1);
             if (unzippedBytes > 0) {
                 for (int i = 0; i < unzippedBytes; i++) {
                     unzippedData.push_back(unzipBuffer[i]);
@@ -81,6 +89,7 @@ MapDescriptor* matchDescription(char* filename) {
             }
         }
         gzclose(inFileZ);
+        buf.clear();
         buf = unzippedData;
     }
 
@@ -89,29 +98,29 @@ MapDescriptor* matchDescription(char* filename) {
     //############################## CHECK GAME VERSION ######################################
     if (gameVer != 3) {
         thisVersion = buf[0];
-        if (thisVersion == 0x0E && gameVer != 0) return NULL;
-        if (thisVersion == 0x15 && gameVer != 1) return NULL;
-        if (thisVersion == 0x1C && gameVer != 2) return NULL;
-        if (thisVersion != 0x0E && thisVersion != 0x15 && thisVersion != 0x1C) return NULL; //WOG and wtf?
+        if (thisVersion == 0x0E && gameVer != 0) goto errorexit;
+        if (thisVersion == 0x15 && gameVer != 1) goto errorexit;
+        if (thisVersion == 0x1C && gameVer != 2) goto errorexit;
+        if (thisVersion != 0x0E && thisVersion != 0x15 && thisVersion != 0x1C) goto errorexit; //WOG and wtf?
     }
 
     //############################## CHECK MAP SIZE ##############################
     thisSize = buf[5];
-    if (thisSize == 0x24 && mapSize != 36) return NULL;
-    if (thisSize == 0x48 && mapSize != 72) return NULL;
-    if (thisSize == 0x6C && mapSize != 108) return NULL;
-    if (thisSize == 0x90 && mapSize != 144) return NULL;
+    if (thisSize == 0x24 && mapSize != 36) goto errorexit;
+    if (thisSize == 0x48 && mapSize != 72) goto errorexit;
+    if (thisSize == 0x6C && mapSize != 108) goto errorexit;
+    if (thisSize == 0x90 && mapSize != 144) goto errorexit;
 
     //############################## CHECK IF MAP HAS DUNGEON ##############################
     thisDungeon = buf[9];
-    if (hasDungeon != 2 && (thisDungeon != hasDungeon)) return NULL;
+    if (hasDungeon != 2 && (thisDungeon != hasDungeon)) goto errorexit;
     
     skipName(infoOffset, buf);//skip the name
     skipName(infoOffset, buf);//skip the description
 
     //############################## CHECK DIFFICULTY ##############################
     thisDifficulty = buf[infoOffset++];
-    if (thisDifficulty < difficulty) return NULL;
+    if (thisDifficulty < difficulty) goto errorexit;
 
     //############################## PLAYER INFO ##############################
     struct Players {
@@ -124,7 +133,8 @@ MapDescriptor* matchDescription(char* filename) {
         //Player info
         players[i].canBeHuman = buf[infoOffset]; thisCanBeHuman += players[i].canBeHuman;
         players[i].canBeComputer = buf[++infoOffset]; thisCanBeComputer += players[i].canBeComputer;
-        infoOffset += 6;
+        if (thisVersion == 0x1C) infoOffset += 6;
+        if (thisVersion == 0x15) infoOffset += 5;
         if (buf[infoOffset] != 0) {
             infoOffset += 5+1;
         } else {
@@ -187,29 +197,36 @@ MapDescriptor* matchDescription(char* filename) {
     if (isAllied != 2) {
         //This is a very simple test, if map is allied. TODO: do a proper cross check for teams that consist of human players.
         int thisMapIsAllied = ( enableTeams != 0x00 && thisCanBeHuman >= 2 ) ? 1 : 0;
-        if (thisMapIsAllied != isAllied) return NULL;
+        if (thisMapIsAllied != isAllied) goto errorexit;
     }
 
     thisPlayers = ( thisCanBeComputer >= thisCanBeHuman ) ? thisCanBeComputer : thisCanBeHuman;
-    if (thisPlayers <= numPlayers) return NULL;
+    if (thisPlayers <= numPlayers) goto errorexit;
 
     //############################## FREE HEROES ##############################
     infoOffset += 24; //Skip heroes availability info
-    unsigned char amountOfHeroes = buf[infoOffset++];
-    if (amountOfHeroes != 0x00) {
-        for (int i = 0; i < amountOfHeroes; ++i) {
-            infoOffset += 2;
-            skipName(infoOffset, buf);
-            infoOffset++; //skip availability byte
+    if (thisVersion == 0x1C) {
+        unsigned char amountOfHeroes = buf[infoOffset++];
+        if (amountOfHeroes != 0x00) {
+            for (int i = 0; i < amountOfHeroes; ++i) {
+                infoOffset += 2;
+                skipName(infoOffset, buf);
+                infoOffset++; //skip availability byte
+            }
         }
     }
+
     infoOffset += 31; //junk
 
     //############################## ARTIFACTS AND SPELLS ##############################
     infoOffset += 18;   //artifacts
-    infoOffset += 9;    //spells
-    infoOffset += 4;    //sec skills
-
+    if (thisVersion == 0x1C) {
+        infoOffset += 9;    //spells
+        infoOffset += 4;    //sec skills
+    }
+    if (thisVersion == 0x15) {
+        infoOffset += 3;    //junk
+    }
     //############################## RUMORS ##############################
     int amountOfRumors = getInt(infoOffset, buf);
     if (amountOfRumors != 0) {
@@ -220,27 +237,28 @@ MapDescriptor* matchDescription(char* filename) {
     }
 
     //############################## HERO SETTINGS ##############################
-    for (int i = 0; i < 156; ++i) {
-        if (buf[infoOffset++] != 0x00) {
-            if (buf[infoOffset++] != 0x00) infoOffset += 4; //exp
-            if (buf[infoOffset++] != 0x00) {//sec skills
-                int secSkillsCount = getInt(infoOffset, buf);
-                if (secSkillsCount != 0) infoOffset += secSkillsCount * 2;
+    if (thisVersion == 0x1C) {
+        for (int i = 0; i < 156; ++i) {
+            if (buf[infoOffset++] != 0x00) {
+                if (buf[infoOffset++] != 0x00) infoOffset += 4; //exp
+                if (buf[infoOffset++] != 0x00) {//sec skills
+                    int secSkillsCount = getInt(infoOffset, buf);
+                    if (secSkillsCount != 0) infoOffset += secSkillsCount * 2;
+                }
+                if (buf[infoOffset++] != 0x00) { //artefacts
+                    infoOffset += 19 * 2; //equipped
+                    int backPackCount = getShort(infoOffset, buf);
+                    if (backPackCount != 0) infoOffset += 2 * backPackCount;
+                }
+                if (buf[infoOffset++] != 0x00) { //bio
+                    skipName(infoOffset, buf);//skip bio
+                }
+                infoOffset += 1; //sex
+                if (buf[infoOffset++] != 0x00) infoOffset += 9; //spells
+                if (buf[infoOffset++] != 0x00) infoOffset += 4; //attributes
             }
-            if (buf[infoOffset++] != 0x00) { //artefacts
-                infoOffset += 19*2; //equipped
-                int backPackCount = getShort(infoOffset,buf);
-                if (backPackCount != 0) infoOffset += 2 * backPackCount;
-            }
-            if (buf[infoOffset++] != 0x00) { //bio
-                skipName(infoOffset, buf);//skip bio
-            }
-            infoOffset += 1; //sex
-            if (buf[infoOffset++] != 0x00) infoOffset += 9; //spells
-            if (buf[infoOffset++] != 0x00) infoOffset += 4; //attributes
         }
     }
-
     //############################## MAP DATA ##############################
     int multiplier = ( thisDungeon != 0 ) ? 2 : 1;
     infoOffset += multiplier*thisSize*thisSize*7; // This is skipped
@@ -455,11 +473,22 @@ MapDescriptor* matchDescription(char* filename) {
 
     MapDescriptor* descriptor = new MapDescriptor { filename, thisScore, locEvents, amountOfRumors,
         timedEventCnt, isGrail, seerHuts, dragonUtopias, questGuard, dragonDwellings };
+
     return descriptor;
+errorexit:
+    buf.clear();
+    return NULL;
+}
+
+CHAR wide_to_narrow(WCHAR w)
+{
+    // simple typecast
+    // works because UNICODE incorporates ASCII into itself
+    return CHAR(w);
 }
 
 int main() { 
-    vector<char*> files, nonMatched;
+    vector<wchar_t*> files, nonMatched;
     vector<MapDescriptor*> matched;
 
     cout << "Welcome to HoMM3 map filter tool. \nUsage: place it in maps directory of your homm3 game and follow "<<
@@ -467,9 +496,7 @@ int main() {
         "\n(!) Please ensure such directory already exists!" <<
         "\nAll maps that are left have matched the search criteria."<<
         "\nWarning! Input is not fool-proof!\n" ;
-    //cout << "Game version: 0: RoE, 1: AB, 2: SoD, 3: DC\n"; cin >> gameVer;
-    gameVer = 2;
-
+    ////cout << "Game version: 0: RoE, 1: AB, 2: SoD, 3: DC\n"; cin >> gameVer;
     cout << "Map size: 0: S, 1: M, 2: L, 3: XL\n"; cin >> mapSize;
     mapSize = ( mapSize + 1 ) * 36; //36,72,108,144
     cout << "Difficulty (min. value): 0: Easy, 1: Normal, 2: Hard, 3: Expert, 4: Impossible\n"; cin >> difficulty;
@@ -477,10 +504,10 @@ int main() {
     cout << "Has dungeon?: 0: No, 1: Yes, 2: DC\n"; cin >> hasDungeon;
     cout << "Is Allied?: 0: No, 1: Yes, 2: DC\n"; cin >> isAllied;
     cout << "Verbose mode? 0: No, 1: Yes\n"; cin >> verbose;
-
+    gameVer = 2;
     // TEST DATA
-    //gameVer = 2; mapSize = 144; numPlayers = 3; hasDungeon = 2; isAllied = 1; difficulty = 1;
-
+    //gameVer = 1; mapSize = 108; numPlayers = 2; hasDungeon = 2; isAllied = 2; difficulty = 1;
+    //gameVer = 2; mapSize = 144; numPlayers = 4; hasDungeon = 2; isAllied = 1; difficulty = 0;
     //####################### List all files in current directory #######################
     WIN32_FIND_DATA ffd;
     HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -488,13 +515,14 @@ int main() {
     hFind = FindFirstFile(szDir, &ffd);
     do {
         if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            char* ch = new char[260];
-            char DefChar = ' ';
-            //This effectively transforms non-latin characters to their latin equivalent. Fix this?
-            WideCharToMultiByte(CP_ACP, 0, ffd.cFileName, -1, ch, 260, &DefChar, NULL);
-            char* found=strstr(ch,".h3m");
-            char* found2=strstr(ch,".H3M");
-            if (found!=NULL || found2!= NULL) files.push_back(ch);
+            wchar_t* found=wcsstr(ffd.cFileName,L".h3m");
+            wchar_t* found2=wcsstr(ffd.cFileName,L".H3M");
+            wchar_t* name;
+            if (found != NULL || found2 != NULL) {
+                name = new wchar_t[260];
+                wcscpy(name, ffd.cFileName);
+                files.push_back(name);
+            }
             //_tprintf(TEXT("  %s   \n"), ffd.cFileName);
         }
     } while (FindNextFile(hFind, &ffd) != 0);
@@ -504,19 +532,25 @@ int main() {
     int i = 0, len = files.size();
     for (auto file : files) {
         if (verbose) {
+        char ch[260];
+        char DefChar = ' ';
+        WideCharToMultiByte(CP_ACP,0,file,-1, ch,260,&DefChar, NULL);
             cout << std::setiosflags(std::ios::fixed) 
-                << "\nMatching: "  << setw(40) << std::left << file  << " (" << i << " of "<< len << ")";
+                << "\nMatching: "  << setw(40) << std::left << std::string(ch)  << " (" << i << " of "<< len << ")";
         }
         i++;
         MapDescriptor* match = matchDescription(file);
         if (match != NULL) {
             matched.push_back(match);
         } else {
-            if (verbose) cout << "...moved!";
-            char* newFile = new char[strlen(file) + 14];
-            strcpy(newFile, "./non_matched/");
-            strcat(newFile, file);
-            rename(file, newFile);
+            WCHAR* newFile = new WCHAR[wcslen(file) + 15];
+            wcscpy(newFile, L"./non_matched/");          
+            wcscat(newFile, file);
+            if (_wrename(file, newFile) != 0 && verbose) {
+                cout << " can't move!";  
+            } else {
+                if (verbose) cout << "...moved!";  
+            }
         }
     }
 
@@ -525,8 +559,10 @@ int main() {
     cout <<   "| Name           | Score | Evt | Rumr | TEvt | QGrd | Grl | Seer | Utop | Drg |\n";
     std::sort (matched.begin(), matched.end(), comparePtrMapDescriptor); 
     for (auto match : matched) {
-        //TODO proper formatted columns.
-        cout << "| " << setw(15)<< std::string(match->fileName).substr(0,13) << "| " 
+        char ch[260];
+        char DefChar = ' ';
+        WideCharToMultiByte(CP_ACP,0,match->fileName,-1, ch,260,&DefChar, NULL);
+        cout << "| " << setw(15) << std::string(ch).substr(0, 13) << "| " 
             << setw(6) << match->score << "| " 
             << setw(4) << match->eventCnt << "| " 
             << setw(5) << match->rumors << "| " 
