@@ -7,7 +7,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HoMM3MapFilter", "HoMM3MapF
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4DFC655E-03BA-41EA-933B-ABDADD6B73E1}"
 	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
 		Release.zip = Release.zip
+		sample_out.PNG = sample_out.PNG
 	EndProjectSection
 EndProject
 Global

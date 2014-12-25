@@ -27,6 +27,8 @@ struct MapDescriptor {
     int utopia;
     int questGuard;
     int dragons;
+    int borderGate;
+    int borderGuard;
     bool operator < (const MapDescriptor& str) const { return (score < str.score); }
 };
 
@@ -272,7 +274,7 @@ MapDescriptor* matchDescription(WCHAR* filename) {
         unsigned char objGroup;
     };
 
-    int dragonDwellings = 0, dragonUtopias = 0;
+    int dragonDwellings = 0, dragonUtopias = 0, borderGates = 0, borderGuards = 0;
     Object* objects = new Object[objectCount];
     for (int i = 0; i < objectCount; ++i) {
         objects[i].objName = getName(infoOffset, buf);
@@ -281,6 +283,8 @@ MapDescriptor* matchDescription(WCHAR* filename) {
         if (strstr(objects[i].objName, "AVGazur.def") != NULL) dragonDwellings++;
         if (strstr(objects[i].objName, "AVGrust.def") != NULL) dragonDwellings++;
         if (strstr(objects[i].objName, "AVSutop0.def") != NULL) dragonUtopias++;
+        if (strstr(objects[i].objName, "AVXbor") != NULL) borderGuards++;
+        if (strstr(objects[i].objName, "avxbgt") != NULL) borderGates++;
         infoOffset += 6 + 6 + 2 + 2;//passability6, actions6, landscape, editGroup
         objects[i].objClass = getInt(infoOffset, buf);
         objects[i].objNumber = getInt(infoOffset, buf);
@@ -470,9 +474,11 @@ MapDescriptor* matchDescription(WCHAR* filename) {
     if (garrissons != 0) thisScore += 10 + 3 * garrissons;
     if (dragonDwellings != 0) thisScore += 100 + 30 * dragonDwellings;
     if (dragonUtopias != 0) thisScore += 250 + 30 * dragonUtopias;
-
+    if (borderGates != 0) thisScore += 80 + 10 * borderGates;
+    if (borderGuards != 0) thisScore += 80 + 10 * borderGuards;
     MapDescriptor* descriptor = new MapDescriptor { filename, thisScore, locEvents, amountOfRumors,
-        timedEventCnt, isGrail, seerHuts, dragonUtopias, questGuard, dragonDwellings };
+        timedEventCnt, isGrail, seerHuts, dragonUtopias,
+        questGuard, dragonDwellings, borderGates, borderGuards };
 
     return descriptor;
 errorexit:
@@ -488,6 +494,7 @@ CHAR wide_to_narrow(WCHAR w)
 }
 
 int main() { 
+    system("mode 150, 60");
     vector<wchar_t*> files, nonMatched;
     vector<MapDescriptor*> matched;
 
@@ -555,8 +562,8 @@ int main() {
     }
 
     //####################### Output results #######################
-    cout << "\n===============================================================================\n";
-    cout <<   "| Name           | Score | Evt | Rumr | TEvt | QGrd | Grl | Seer | Utop | Drg |\n";
+    cout << "\n==========================================================================================================\n";
+    cout <<   "| Name           | Score | Evt | Rumr | TEvt | QGrd | Grl | Seer | Utop | Drg.dwell | Brd.Gate | Brd.Grd |\n";
     std::sort (matched.begin(), matched.end(), comparePtrMapDescriptor); 
     for (auto match : matched) {
         char ch[260];
@@ -571,9 +578,11 @@ int main() {
             << setw(4) << match->grail << "| " 
             << setw(5) << match->seer << "| " 
             << setw(5) << match->utopia << "| " 
-            << setw(4) << match->dragons << "|\n";
+            << setw(9) << match->dragons << "| " 
+            << setw(8) << match->borderGate << "| " 
+            << setw(7) << match->borderGuard << "|\n";
     }   
-    cout << "===============================================================================\n";
+    cout << "==========================================================================================================\n";
     system("pause");
     return 0;
 }
